@@ -13,10 +13,11 @@ import tkinter as tk
 from tkinter import filedialog, messagebox, ttk, simpledialog
 from pathlib import Path
 import threading
-import shutil
 import subprocess
 import tempfile
-import platform
+
+
+SEP = os.sep
 
 
 def open_folder(path):
@@ -35,22 +36,6 @@ try:
     HAS_PYMUPDF = True
 except ImportError:
     HAS_PYMUPDF = False
-
-
-def pdf_to_images(pdf_path, dpi=150):
-    """PDF 每页转成图片"""
-    import fitz
-    doc = fitz.open(pdf_path)
-    images = []
-    for i in range(doc.page_count):
-        zoom = dpi / 72
-        mat = fitz.Matrix(zoom, zoom)
-        pix = doc[i].get_pixmap(matrix=mat)
-        tmp = os.path.join(tempfile.gettempdir(), f'_xh_p{i}.png')
-        pix.save(tmp)
-        images.append(tmp)
-    doc.close()
-    return images
 
 
 def merge_pdfs(files, output_path):
@@ -139,6 +124,8 @@ class ConverterApp:
             ('📝 PDF 转文字', self.do_pdf2text, '提取 PDF 中的文字内容'),
             ('📎 DOCX 转 PDF', self.do_docx2pdf, 'Word 文档转为 PDF'),
         ]
+        
+        self.buttons = []  # 保存按钮列表，处理后禁用
 
         for title, cmd, desc in self.tools:
             subf = tk.Frame(frame, relief='groove', borderwidth=1, padx=12, pady=6)
@@ -148,6 +135,7 @@ class ConverterApp:
                             activebackground='#2980b9', activeforeground='white')
             btn.pack(side='left', padx=(0, 12))
             tk.Label(subf, text=desc, font=('', 10), fg='#666').pack(side='left')
+            self.buttons.append(btn)
 
         # 状态
         self.status = tk.Label(self.root, text='就绪', font=('', 11), fg='#999')
@@ -171,19 +159,35 @@ class ConverterApp:
         if folder:
             self.out_var.set(folder)
 
+    def set_buttons_enabled(self, enabled):
+        """启用或禁用所有功能按钮"""
+        state = 'normal' if enabled else 'disabled'
+        for btn in self.buttons:
+            btn.config(state=state)
+
     def run_task(self, func):
         if not HAS_PYMUPDF:
             messagebox.showerror('缺少依赖', '请先运行：pip3 install PyMuPDF Pillow')
             return
+        self.set_buttons_enabled(False)
         self.progress.pack(pady=5)
         self.progress.start()
         self.status.config(text='⏳ 处理中…')
         self.root.update()
-        try:
-            func()
-        finally:
-            self.progress.stop()
-            self.progress.pack_forget()
+        
+        def task():
+            try:
+                func()
+            finally:
+                self.root.after(0, self.task_done)
+        
+        threading.Thread(target=task, daemon=True).start()
+
+    def task_done(self):
+        """处理完成后的清理"""
+        self.progress.stop()
+        self.progress.pack_forget()
+        self.set_buttons_enabled(True)
 
     def do_merge(self):
         files = filedialog.askopenfilenames(title='选择要合并的 PDF', filetypes=[('PDF', '*.pdf')])
@@ -397,15 +401,35 @@ class ConverterApp:
                             'win32': 'C:/Windows/Fonts/simsun.ttc',
                         }
                         font_file = font_paths.get(sys.platform, '')
-                        if os.path.exists(font_file):
+                        font_ok = os.path.exists(font_file)
+                        
+                        if not font_ok:
+                            # Linux：尝试常见中文字体路径
+                            linux_fonts = [
+                                '/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc',
+                                '/usr/share/fonts/truetype/noto/NotoSansCJK-Regular.ttc',
+                                '/usr/share/fonts/noto-cjk/NotoSansCJK-Regular.ttc',
+                            ]
+                            for lf in linux_fonts:
+                                if os.path.exists(lf):
+                                    font_file = lf
+                                    font_ok = True
+                                    break
+                        
+                        if font_ok:
                             pdf.add_font('CJK', '', font_file, uni=True)
                             pdf.set_font('CJK', '', 12)
                         else:
-                            pdf.add_font('CJK', '', '', uni=True)
-                            pdf.set_font('CJK', '', 12)
+                            # 所有字体都找不到 → 用自带核心字体（仅支持西文）
+                            pdf.set_font('Helvetica', '', 11)
+                            pdf.multi_cell(0, 8, '[中文字体未找到，以下内容为纯文本]')
                         
                         for para in doc.paragraphs:
                             if para.text.strip():
+                                # 检查是否包含中文，如果没找到字体则跳过
+                                has_chinese = any('\u4e00' <= c <= '\u9fff' for c in para.text)
+                                if not font_ok and has_chinese:
+                                    continue
                                 pdf.multi_cell(0, 8, para.text)
                         
                         pdf.output(out)
