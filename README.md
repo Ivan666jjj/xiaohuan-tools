@@ -1,14 +1,15 @@
 <p align="center">
-  <h1 align="center">🔧 小焕的工具</h1>
+  <h1 align="center">🔧 小焕的工具 · Xiaohuan Tools</h1>
   <p align="center">
-    macOS 实用小工具 · 图形界面 · 双击即用
+    实用小工具集合 — 天气校准 / 文件归类 / PDF 处理
     <br>
-    支持 Apple Silicon (M 系列) 和 Intel Mac
+    全部免费开源 · 中国人民大学文学院强基古文字方向出品
   </p>
   <p align="center">
-    <img src="https://img.shields.io/badge/平台-macOS-blue" alt="Platform">
+    <img src="https://img.shields.io/badge/平台-macOS%20%7C%20Windows%20%7C%20Linux-blue" alt="Platform">
     <img src="https://img.shields.io/badge/Python-3.8%2B-green" alt="Python">
     <img src="https://img.shields.io/badge/许可证-MIT-orange" alt="License">
+    <img src="https://img.shields.io/badge/古籍爱好者-适用-brightgreen" alt="Guji">
   </p>
 </p>
 
@@ -16,11 +17,12 @@
 
 ## 📦 包含工具
 
-| 工具 | 功能 | 适用场景 | 平台 |
-|------|------|---------|:----:|
-| **智能天气** | 多模型交叉验证天气预报，比普通预报更准 | 出门前看天气、要不要带伞、周末出行参考 | macOS / Windows / Linux |
-| **小焕归类器** | 选择文件夹 → 自动按内容分类整理 | 资料太多、桌面太乱、想归类文件 | macOS / Windows |
-| **小焕的转换工具** | PDF 合并/拆分/提取/转图片、图片转 PDF、DOCX 转 PDF | 日常文档处理 | macOS |
+| 工具 | 功能 | 适合谁 | 平台 |
+|------|------|--------|:----:|
+| 🌤 **智能天气** | 多模型交叉验证天气预报，自动修正云量和降雨概率偏差 | 所有人，比手机天气更准 | macOS / Windows / Linux |
+| 🏯 **北京天气校准版** | 专为北京海淀优化，内置 GFS 偏差校准系数 | 北京居民/海淀学生/圆明园周边 | macOS / Windows / Linux |
+| 📂 **小焕归类器** | 选择文件夹 → 按文件名关键词自动分类整理 | 资料太多的学生/办公族 | macOS / Windows |
+| 🔧 **小焕的转换工具** | PDF 合并/拆分/提取/转图片、图片转 PDF、DOCX 转 PDF | 需处理 PDF 的任何人 | macOS |
 
 ---
 
@@ -49,14 +51,17 @@ pip3 install -r requirements.txt
 或者用终端运行：
 
 ```bash
+# 智能天气（全国通用）
+python3 智能天气/smart_weather.py
+
+# 北京天气（海淀校准版）
+python3 智能天气/beijing_weather.py
+
 # 归类器
 python3 归类器/classifier.py
 
 # 转换工具
 python3 转换工具/converter.py
-
-# 智能天气
-python3 智能天气/smart_weather.py
 ```
 
 ---
