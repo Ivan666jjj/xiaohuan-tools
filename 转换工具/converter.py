@@ -269,13 +269,72 @@ class ConverterApp:
                 import fitz
                 doc = fitz.open(fp)
                 text = ''
+                is_scanned = False
                 for i in range(doc.page_count):
                     page_text = doc[i].get_text('text', sort=True)
                     if page_text.strip():
                         text += f'--- 第 {i+1} 页 ---\n{page_text}\n\n'
                     else:
-                        text += f'--- 第 {i+1} 页（扫描页，请用古籍工具的 scan-pdf 识别）---\n\n'
+                        is_scanned = True
+                        text += f'--- 第 {i+1} 页（扫描页，无可选文字）---\n\n'
                 doc.close()
+                
+                # 如果是扫描版 PDF，询问用户是否用 OCR
+                if is_scanned:
+                    use_ocr = messagebox.askyesno(
+                        '检测到扫描版',
+                        '这个 PDF 看起来是扫描版（图片型），用普通方式提取不到文字。\n\n'
+                        '是否尝试用 OCR 识别文字？（需要额外安装 OCR 引擎）'
+                    )
+                    if use_ocr:
+                        try:
+                            import rapidocr_onnxruntime
+                        except ImportError:
+                            install = messagebox.askyesno(
+                                '需要安装 OCR',
+                                '需要安装 OCR 引擎（约 200MB）。是否现在安装？\n\n'
+                                '命令：pip3 install rapidocr-onnxruntime'
+                            )
+                            if install:
+                                self.status.config(text='⏳ 正在安装 OCR 引擎…')
+                                self.root.update()
+                                import subprocess
+                                p = subprocess.run(
+                                    [sys.executable, '-m', 'pip', 'install', 'rapidocr-onnxruntime'],
+                                    capture_output=True, text=True, timeout=300)
+                                if p.returncode != 0:
+                                    messagebox.showerror('安装失败', f'安装失败：{p.stderr[:200]}')
+                                    return
+                                messagebox.showinfo('安装完成', 'OCR 引擎安装成功！再次点击"PDF 转文字"即可使用。')
+                                return
+                            else:
+                                messagebox.showinfo('提示', '可以到 guji-tools 仓库下载古籍专用 OCR 工具。')
+                                return
+                        
+                        # OCR 识别
+                        from rapidocr_onnxruntime import RapidOCR
+                        ocr_engine = RapidOCR()
+                        self.status.config(text='⏳ OCR 识别中…')
+                        self.root.update()
+                        
+                        doc2 = fitz.open(fp)
+                        ocr_text = ''
+                        for i in range(doc2.page_count):
+                            zoom = 200 / 72
+                            mat = fitz.Matrix(zoom, zoom)
+                            pix = doc2[i].get_pixmap(matrix=mat)
+                            from PIL import Image
+                            import io
+                            img_data = pix.tobytes("png")
+                            img = Image.open(io.BytesIO(img_data))
+                            result, _ = ocr_engine(img)
+                            if result:
+                                for line in result:
+                                    ocr_text += line[1] + '\n'
+                            ocr_text += '\n'
+                        doc2.close()
+                        text = ocr_text
+                
                 with open(out, 'w', encoding='utf-8') as f:
                     f.write(text)
                 self.status.config(text='✅ 文字提取完成')
@@ -296,15 +355,70 @@ class ConverterApp:
             for fp in files:
                 name = Path(fp).stem
                 out = os.path.join(output_dir, f'{name}.pdf')
-                try:
-                    if sys.platform == 'darwin':
+                converted = False
+                
+                # 方法1：macOS 自带的 textutil
+                if sys.platform == 'darwin':
+                    try:
                         subprocess.run(['textutil', '-convert', 'pdf', fp, '-output', out],
                                       check=True, timeout=30)
                         results.append(f'✅ {name}.pdf')
-                    else:
-                        results.append(f'⚠️ {name}: DOCX→PDF 仅支持 macOS')
-                except Exception as e:
-                    results.append(f'❌ {name}: {e}')
+                        converted = True
+                    except:
+                        pass
+                
+                # 方法2：LibreOffice（如果已安装）
+                if not converted:
+                    for cmd in ['libreoffice', 'soffice']:
+                        try:
+                            subprocess.run([cmd, '--headless', '--convert-to', 'pdf', fp,
+                                          '--outdir', output_dir],
+                                          check=True, timeout=60,
+                                          capture_output=True)
+                            results.append(f'✅ {name}.pdf（通过 LibreOffice）')
+                            converted = True
+                            break
+                        except:
+                            pass
+                
+                # 方法3：纯 Python 转文字版 PDF（保底）
+                if not converted:
+                    try:
+                        from docx import Document
+                        from fpdf import FPDF
+                        
+                        doc = Document(fp)
+                        pdf = FPDF()
+                        pdf.add_page()
+                        
+                        # 尝试用系统自带中文字体
+                        font_paths = {
+                            'darwin': '/System/Library/Fonts/PingFang.ttc',
+                            'win32': 'C:/Windows/Fonts/simsun.ttc',
+                        }
+                        font_file = font_paths.get(sys.platform, '')
+                        if os.path.exists(font_file):
+                            pdf.add_font('CJK', '', font_file, uni=True)
+                            pdf.set_font('CJK', '', 12)
+                        else:
+                            pdf.add_font('CJK', '', '', uni=True)
+                            pdf.set_font('CJK', '', 12)
+                        
+                        for para in doc.paragraphs:
+                            if para.text.strip():
+                                pdf.multi_cell(0, 8, para.text)
+                        
+                        pdf.output(out)
+                        results.append(f'✅ {name}.pdf（文字版）')
+                        converted = True
+                    except ImportError:
+                        results.append(f'⚠️ {name}: 需要安装 python-docx 和 fpdf2')
+                    except Exception as e:
+                        results.append(f'⚠️ {name}: {str(e)[:60]}')
+                
+                if not converted:
+                    results.append(f'⚠️ {name}: 未能转换（可尝试安装 LibreOffice）')
+            
             msg = '\n'.join(results)
             self.status.config(text='转换完成')
             messagebox.showinfo('完成', msg)
