@@ -48,10 +48,8 @@ pip3 install -r requirements.txt
 或者用终端运行：
 
 ```bash
-# 归类器
 python3 归类器/classifier.py
 
-# 转换工具
 python3 转换工具/converter.py
 ```
 
@@ -125,13 +123,10 @@ python3 转换工具/converter.py
 
 打开终端，输入以下命令（注意替换成你实际的文件路径）：
 ```bash
-# 查看文件是否有隔离标记（如果显示 com.apple.quarantine，说明有）
 xattr -l /Applications/小焕归类器.command
 
-# 移除隔离标记
 xattr -d com.apple.quarantine /Applications/小焕归类器.command
 
-# 给执行权限
 chmod +x /Applications/小焕归类器.command
 ```
 如果不知道文件在哪里，可以把 .command 文件直接拖到终端窗口里，它会自动填入路径。
@@ -145,7 +140,9 @@ chmod +x /Applications/小焕归类器.command
 3. 如果还是没反应，打开终端输入：
    ```bash
    cd 对应工具的文件夹
-   python3 classifier.py   # 或 python3 converter.py
+   python3 classifier.py
+
+   python3 converter.py
    ```
 </details>
 
