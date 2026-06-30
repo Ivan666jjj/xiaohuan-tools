@@ -18,6 +18,7 @@
 
 | 工具 | 功能 | 适用场景 | 平台 |
 |------|------|---------|:----:|
+| **智能天气** | 多模型交叉验证天气预报，比普通预报更准 | 出门前看天气、要不要带伞、周末出行参考 | macOS / Windows / Linux |
 | **小焕归类器** | 选择文件夹 → 自动按内容分类整理 | 资料太多、桌面太乱、想归类文件 | macOS / Windows |
 | **小焕的转换工具** | PDF 合并/拆分/提取/转图片、图片转 PDF、DOCX 转 PDF | 日常文档处理 | macOS |
 
@@ -48,9 +49,14 @@ pip3 install -r requirements.txt
 或者用终端运行：
 
 ```bash
+# 归类器
 python3 归类器/classifier.py
 
+# 转换工具
 python3 转换工具/converter.py
+
+# 智能天气
+python3 智能天气/smart_weather.py
 ```
 
 ---
