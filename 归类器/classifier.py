@@ -10,6 +10,7 @@
 import os
 import sys
 import shutil
+import subprocess
 import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
 from pathlib import Path
@@ -50,6 +51,23 @@ def classify_file(filename):
                     return category
     return '其他'
 
+def safe_move(src, dest_dir):
+    """安全移动文件，自动处理重名"""
+    dest = Path(dest_dir) / src.name
+    if dest.exists():
+        stem = dest.stem
+        suffix = dest.suffix
+        i = 1
+        while True:
+            new_name = f"{stem}_{i}{suffix}"
+            new_path = dest.parent / new_name
+            if not new_path.exists():
+                dest = new_path
+                break
+            i += 1
+    shutil.move(str(src), str(dest))
+    return dest
+
 def run_classify(folder_path, callback):
     """在后台线程中运行归类"""
     try:
@@ -63,20 +81,23 @@ def run_classify(folder_path, callback):
             cat = classify_file(f.name)
             classified.setdefault(cat, []).append(f)
         total = 0
+        moved_details = []
         for cat, cat_files in classified.items():
             if cat == '其他':
                 continue
             dest = folder / cat
             dest.mkdir(parents=True, exist_ok=True)
             for f in cat_files:
-                shutil.move(str(f), str(dest / f.name))
+                new_path = safe_move(f, dest)
+                moved_details.append(f"  {f.name} → {cat}/")
             total += len(cat_files)
         # 其他
         if '其他' in classified:
             dest = folder / '其他'
             dest.mkdir(parents=True, exist_ok=True)
             for f in classified['其他']:
-                shutil.move(str(f), str(dest / f.name))
+                new_path = safe_move(f, dest)
+                moved_details.append(f"  {f.name} → 其他/")
             total += len(classified['其他'])
         # 日志
         log_path = folder / '归类日志.txt'
@@ -85,8 +106,11 @@ def run_classify(folder_path, callback):
             log.write(f"共整理 {total} 个文件\n")
             for cat, cf in sorted(classified.items()):
                 log.write(f"  {cat}: {len(cf)} 个\n")
+            log.write("\n【移动详情】\n")
+            for detail in moved_details:
+                log.write(detail + "\n")
             log.write("\n")
-        callback(True, f"✅ 整理完成！共 {total} 个文件", classified)
+        callback(True, f"✅ 整理完成！共 {total} 个文件（日志已记录详情）", classified)
     except Exception as e:
         callback(False, f"❌ 出错了：{str(e)}", {})
 
@@ -146,7 +170,9 @@ class ClassifierApp:
             self.result_text.delete('1.0', 'end')
             self.status.config(text='已选择文件夹，点击"开始归类"')
             if sys.platform == 'darwin':
-                os.system(f'osascript -e "display notification \\"已选择: {Path(folder).name}\\" with title \\"小焕归类器\\"" 2>/dev/null')
+                subprocess.run(['osascript', '-e',
+                    f'display notification "已选择: {Path(folder).name}" with title "小焕归类器"'],
+                    capture_output=True)
 
     def start_classify(self):
         folder = self.folder_var.get()
@@ -174,11 +200,11 @@ class ClassifierApp:
             log_file = folder / '归类日志.txt'
             if self.log_var.get() and log_file.exists():
                 if sys.platform == 'darwin':
-                    os.system(f'open "{log_file}"')
+                    subprocess.run(['open', str(log_file)], capture_output=True)
                 elif sys.platform == 'win32':
                     os.startfile(str(log_file))
                 else:
-                    os.system(f'xdg-open "{log_file}"')
+                    subprocess.run(['xdg-open', str(log_file)], capture_output=True)
         else:
             self.result_text.insert('1.0', msg)
 

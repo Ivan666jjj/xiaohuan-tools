@@ -23,11 +23,11 @@ def open_folder(path):
     """跨平台打开文件夹"""
     path = str(path)
     if sys.platform == 'darwin':
-        os.system(f'open "{path}"')
+        subprocess.run(['open', path], capture_output=True)
     elif sys.platform == 'win32':
         os.startfile(path)
     else:  # Linux
-        os.system(f'xdg-open "{path}"')
+        subprocess.run(['xdg-open', path], capture_output=True)
 
 # ── PDF 操作（纯 Python，不依赖外部命令）──
 try:
