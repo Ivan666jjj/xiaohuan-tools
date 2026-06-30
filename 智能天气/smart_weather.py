@@ -130,9 +130,11 @@ class SmartWeatherApp:
         self.root.protocol("WM_DELETE_WINDOW", self.root.quit)
 
     def log(self, text):
-        self.result_text.insert('end', text + '\n')
-        self.result_text.see('end')
-        self.root.update()
+        """线程安全地追加文本到结果框"""
+        def _append():
+            self.result_text.insert('end', text + '\n')
+            self.result_text.see('end')
+        self.root.after(0, _append)
 
     def do_query(self):
         city = self.city_var.get().strip()
@@ -165,12 +167,10 @@ class SmartWeatherApp:
             else:
                 self.log(f"⚠️ 实况查询失败：{err}")
 
-            # 2. Open-Meteo 多模型预报
+            # 2. Open-Meteo 多模型预报（通过城市名称定位坐标）
             self.log('\n📡 正在查询多模型预报…')
-            forecast, err = get_forecast(0, 0)  # fallback: we need lat/lon for the city
-            
-            # Try to get coordinates from a simple lookup
             coord_url = f"https://geocoding-api.open-meteo.com/v1/search?name={urllib.parse.quote(city)}&count=1&language=zh"
+            forecast = None
             try:
                 coord_data = json.loads(fetch_url(coord_url))
                 if coord_data.get('results'):
@@ -189,12 +189,14 @@ class SmartWeatherApp:
                         self.log(f"\n📅 未来几天预报：")
                         for day in forecast['daily']:
                             rain = day['rain_prob']
-                            rain_warn = ' ⚠️ 带伞！' if rain and rain > 50 else ''
+                            rain_warn = ' ⚠️ 带伞！' if rain > 50 else ''
                             self.log(f"   {day['date']}  {code_to_text(day['code'])}  "
                                      f"{day['min']}~{day['max']}°C  "
                                      f"🌧降水概率{rain}%{rain_warn}")
                     else:
                         self.log(f"⚠️ 预报查询失败：{err}")
+                else:
+                    self.log(f"⚠️ 未找到城市「{city}」的坐标信息")
             except Exception as e:
                 self.log(f"⚠️ 定位失败：{e}")
 
@@ -204,7 +206,6 @@ class SmartWeatherApp:
             if wttr and forecast and forecast.get('daily'):
                 today = forecast['daily'][0]
                 rain_prob = today.get('rain_prob', 0)
-                cloud = int(wttr.get('cloud', 50))
                 temp = int(wttr.get('temp', 25))
                 
                 if rain_prob > 60:
