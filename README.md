@@ -120,6 +120,24 @@ python3 转换工具/converter.py
 ## ❓ 常见问题
 
 <details>
+<summary><b>Q: 双击 .command 文件弹出黄色三角形警告窗口，但功能正常？</b></summary>
+这是因为 macOS 的安全机制阻止了从网络下载的脚本直接运行。解决方法是移除文件的"隔离标记"：
+
+打开终端，输入以下命令（注意替换成你实际的文件路径）：
+```bash
+# 查看文件是否有隔离标记（如果显示 com.apple.quarantine，说明有）
+xattr -l /Applications/小焕归类器.command
+
+# 移除隔离标记
+xattr -d com.apple.quarantine /Applications/小焕归类器.command
+
+# 给执行权限
+chmod +x /Applications/小焕归类器.command
+```
+如果不知道文件在哪里，可以把 .command 文件直接拖到终端窗口里，它会自动填入路径。
+</details>
+
+<details>
 <summary><b>Q: 双击 .command 文件没反应怎么办？</b></summary>
 第一次运行时，macOS 可能会阻止未识别的开发者应用。解决方法：
 1. 右键（或双指点击）.command 文件 → 选择"打开"
