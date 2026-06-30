@@ -228,11 +228,24 @@ class ConverterApp:
         pages = set()
         for part in pages_str.split(','):
             part = part.strip()
+            if not part:
+                continue
             if '-' in part:
-                a, b = part.split('-')
-                pages.update(range(int(a.strip()), int(b.strip())+1))
+                try:
+                    a, b = part.split('-')
+                    a, b = int(a.strip()), int(b.strip())
+                    if a > b:
+                        a, b = b, a
+                    pages.update(range(a, b+1))
+                except ValueError:
+                    messagebox.showerror('输入错误', f'无法识别页码范围："{part}"\n请输入正确的格式，如：1,3-5,8')
+                    return
             else:
-                pages.add(int(part))
+                try:
+                    pages.add(int(part))
+                except ValueError:
+                    messagebox.showerror('输入错误', f'无法识别页码："{part}"')
+                    return
         output_dir = self.out_var.get()
         Path(output_dir).mkdir(parents=True, exist_ok=True)
         name = Path(fp).stem
