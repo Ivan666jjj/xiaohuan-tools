@@ -1,0 +1,32 @@
+name: 打包 Windows exe
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '归类器_Windows/**'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 安装 Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 安装 PyInstaller
+        run: pip install pyinstaller
+
+      - name: 打包为 exe
+        run: pyinstaller --onefile --name "小焕归类器" 归类器_Windows/classifier_win.py
+
+      - name: 上传 exe
+        uses: actions/upload-artifact@v4
+        with:
+          name: 小焕归类器_Windows
+          path: dist/小焕归类器.exe
