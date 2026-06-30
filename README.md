@@ -68,10 +68,10 @@ python3 转换工具/converter.py
 > - 写论文时的"参考资料"文件夹
 
 > 💡 **Windows 用户请看这里：**
-> 1. 进入 `归类器_Windows` 文件夹
-> 2. 双击 **小焕归类器.bat**（会弹出黑色窗口）或 **小焕归类器.pyw**（无窗口）
-> 3. 如果双击没反应，右键 → 用 Python 打开
-> 4. 或者打开终端运行：`python classifier_win.py`
+> 1. 进入 `归类器_Windows` 文件夹，双击 **小焕归类器.bat** 或 **小焕归类器.pyw**
+> 2. 或者 **下载打包好的 .exe**（无需安装 Python）：
+>    打开 https://github.com/Ivan666jjj/xiaohuan-tools/actions
+>    点最新的 **打包 Windows exe** → 点 **小焕归类器_Windows** 下载 .exe 文件
 
 ### 分类说明（文理科通用）
 
