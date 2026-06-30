@@ -86,9 +86,83 @@ python3 转换工具/converter.py
 | 提取页面 | 指定页码范围，提取为新的 PDF |
 | 图片转 PDF | 多张图片合并为一份 PDF |
 | PDF 转文字 | 提取 PDF 中的文字内容（保存为 .txt）|
-| DOCX 转 PDF | Word 文档转为 PDF（macOS 可用） |
+| DOCX 转 PDF | Word 文档转为 PDF（全平台，macOS 效果最好） |
 
 **使用方法：** 双击运行 → 选择功能 → 选择文件 → 自动完成
+
+---
+
+## ❓ 常见问题
+
+<details>
+<summary><b>Q: 双击 .command 文件没反应怎么办？</b></summary>
+第一次运行时，macOS 可能会阻止未识别的开发者应用。解决方法：
+1. 右键（或双指点击）.command 文件 → 选择"打开"
+2. 会弹出一个对话框，点击"打开"即可
+3. 如果还是没反应，打开终端输入：
+   ```bash
+   cd 对应工具的文件夹
+   python3 classifier.py   # 或 python3 converter.py
+   ```
+</details>
+
+<details>
+<summary><b>Q: 提示 "Python 找不到" 怎么办？</b></summary>
+说明你没装 Python。去 https://python.org 下载安装，安装时务必勾选 "Add Python to PATH"。
+</details>
+
+<details>
+<summary><b>Q: 安装依赖时出错怎么办？</b></summary>
+打开终端，分别执行以下命令：
+```bash
+pip3 install --upgrade pip
+pip3 install PyMuPDF Pillow
+pip3 install python-docx fpdf2
+```
+如果有红字报错，可以截图发 Issue 或者搜索错误信息。
+</details>
+
+<details>
+<summary><b>Q: 归类器把文件归错了怎么办？</b></summary>
+关键词匹配做不到 100% 准确，分错是正常的。去对应的文件夹里，把文件手动拖到正确的文件夹就行。归类日志（归类日志.txt）会记录每个文件被移去了哪里。
+</details>
+
+<details>
+<summary><b>Q: 归类器会把系统文件弄乱吗？</b></summary>
+不会。归类器只会移动普通的文件（文档、图片、PDF 等），不会移动 .app、系统文件或隐藏文件。但建议不要直接对"桌面"整个文件夹归类，可以先把桌面文件移到一个新文件夹再归类。
+</details>
+
+<details>
+<summary><b>Q: 两个不同文件同名怎么办？</b></summary>
+归类器会自动处理：如果有同名文件，第二个会自动加上编号（如 笔记_1.docx、笔记_2.docx），不会覆盖原有文件。
+</details>
+
+<details>
+<summary><b>Q: PDF 转文字转出来是空的怎么办？</b></summary>
+说明这个 PDF 是扫描版（图片型），不是文字型。软件会自动检测到并询问你是否要用 OCR 识别。点"是"后会引导你安装 OCR 引擎，安装完成后再次点击"PDF 转文字"即可正常识别。
+</details>
+
+<details>
+<summary><b>Q: DOCX 转 PDF 按钮点了然后呢？</b></summary>
+软件会自动尝试多种方法转换：
+- macOS：用系统自带的 textutil 转换（最快、排版最好）
+- 如果装了 LibreOffice：用 LibreOffice 转换
+- 以上都不行的话：用 Python 转成文字版 PDF（不带排版，但文字都在）
+</details>
+
+<details>
+<summary><b>Q: 软件支持 Windows 或 Linux 吗？</b></summary>
+脚本本身是跨平台的，但 .command 文件只能在 macOS 上双击运行。Windows 用户可以打开终端执行：
+```bash
+python 归类器\classifier.py
+python 转换工具\converter.py
+```
+</details>
+
+<details>
+<summary><b>Q: 为什么打开软件后按钮是灰色的？</b></summary>
+归类器需要先选择一个文件夹，按钮才会亮起。点击"选择文件夹"按钮选一个文件夹就行。
+</details>
 
 ---
 
