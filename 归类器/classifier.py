@@ -175,8 +175,10 @@ class ClassifierApp:
             if self.log_var.get() and log_file.exists():
                 if sys.platform == 'darwin':
                     os.system(f'open "{log_file}"')
-                else:
+                elif sys.platform == 'win32':
                     os.startfile(str(log_file))
+                else:
+                    os.system(f'xdg-open "{log_file}"')
         else:
             self.result_text.insert('1.0', msg)
 

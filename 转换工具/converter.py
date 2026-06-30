@@ -16,6 +16,18 @@ import threading
 import shutil
 import subprocess
 import tempfile
+import platform
+
+
+def open_folder(path):
+    """跨平台打开文件夹"""
+    path = str(path)
+    if sys.platform == 'darwin':
+        os.system(f'open "{path}"')
+    elif sys.platform == 'win32':
+        os.startfile(path)
+    else:  # Linux
+        os.system(f'xdg-open "{path}"')
 
 # ── PDF 操作（纯 Python，不依赖外部命令）──
 try:
@@ -186,7 +198,7 @@ class ConverterApp:
             merge_pdfs(files, out)
             self.status.config(text=f'✅ 合并完成：{Path(out).name}')
             messagebox.showinfo('完成', f'合并完成！\n共 {len(files)} 个文件\n保存到：{out}')
-            os.system(f'open "{Path(out).parent}"')
+            open_folder(Path(out).parent)
         self.run_task(task)
 
     def do_split(self):
@@ -199,7 +211,7 @@ class ConverterApp:
             n = split_pdf(fp, output_dir)
             self.status.config(text=f'✅ 拆分完成：{n} 页')
             messagebox.showinfo('完成', f'拆分完成！共 {n} 页\n保存到：{output_dir}')
-            os.system(f'open "{output_dir}"')
+            open_folder(output_dir)
         self.run_task(task)
 
     def do_extract(self):
@@ -225,7 +237,7 @@ class ConverterApp:
             extract_pages(fp, pages, out)
             self.status.config(text=f'✅ 提取完成：{len(pages)} 页')
             messagebox.showinfo('完成', f'提取完成！共 {len(pages)} 页\n保存到：{out}')
-            os.system(f'open "{Path(output_dir)}"')
+            open_folder(Path(output_dir))
         self.run_task(task)
 
     def do_img2pdf(self):
@@ -241,7 +253,7 @@ class ConverterApp:
             images_to_pdf(files, out)
             self.status.config(text=f'✅ 转换完成：{len(files)} 张图片')
             messagebox.showinfo('完成', f'转换完成！共 {len(files)} 张图片\n保存到：{out}')
-            os.system(f'open "{Path(out).parent}"')
+            open_folder(Path(out).parent)
         self.run_task(task)
 
     def do_pdf2text(self):
@@ -268,7 +280,7 @@ class ConverterApp:
                     f.write(text)
                 self.status.config(text='✅ 文字提取完成')
                 messagebox.showinfo('完成', f'提取完成！保存到：{out}')
-                os.system(f'open "{Path(output_dir)}"')
+                open_folder(Path(output_dir))
             except Exception as e:
                 messagebox.showerror('错误', str(e))
         self.run_task(task)
@@ -296,7 +308,7 @@ class ConverterApp:
             msg = '\n'.join(results)
             self.status.config(text='转换完成')
             messagebox.showinfo('完成', msg)
-            os.system(f'open "{output_dir}"')
+            open_folder(output_dir)
         self.run_task(task)
 
     def run(self):
