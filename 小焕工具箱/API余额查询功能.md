@@ -1,60 +1,94 @@
-## 十、DeepSeek API 余额查询功能（必做）
+## 十、DeepSeek API 余额查询 + 可用量估算（必做）
 
 ### 10.1 原理
-DeepSeek 余额查询接口，通过 API Key 获取账户信息。
+DeepSeek 有余额查询接口。根据余额 ÷ 每次查询的预估花费 = 预估剩余次数。
 
-### 10.2 实现
+### 10.2 接口
 ```javascript
-async function checkDeepSeekBalance(apiKey) {
+async function getDeepSeekBalance(apiKey) {
   try {
     const resp = await fetch('https://api.deepseek.com/user/balance', {
       headers: { 'Authorization': 'Bearer ' + apiKey, 'Accept': 'application/json' }
     });
     const data = await resp.json();
     if (data.balance !== undefined) {
-      updateBalanceUI(data.balance, data.currency || 'CNY');
+      const balance = data.balance;           // 余额（元）
+      const currency = data.currency || 'CNY';
+      const isAvailable = data.is_available;  // 是否可用
+      const totalUsed = data.total_used || 0; // 总已用金额
+      return { balance, currency, isAvailable, totalUsed };
     }
-    return data;
-  } catch(e) {
-    showStatus('⚠️ 余额查询失败', 'red');
     return null;
+  } catch(e) {
+    return { error: e.message };
   }
 }
+```
 
-function updateBalanceUI(balance, currency) {
-  const el = document.getElementById('balance-display');
-  if (!el) return;
-  const color = balance > 10 ? '#4CAF50' : balance > 1 ? '#FF9800' : '#f44336';
-  el.innerHTML = `🔑 DeepSeek: ${currency} ${balance.toFixed(2)}`;
-  el.style.color = color;
+### 10.3 可用量估算（重要）
+根据不同模型和输入长度，自动估算每次查询的成本：
+
+```javascript
+const MODEL_COST = {
+  'deepseek-chat': 0.0005,  // 元/次（约500 token）
+  'deepseek-coder': 0.0008, // 元/次
+};
+
+function estimateUsage(balance) {
+  const costPerQuery = 0.0005; // 平均每次查询
+  const remainingQueries = Math.floor(balance / costPerQuery);
+  
+  // 按使用场景估算
+  const daily = 30;                // 每天30次查询
+  const daysLeft = Math.floor(remainingQueries / daily);
+  
+  return {
+    remainingQueries,              // 剩余次数
+    daysLeft,                      // 还能用多少天
+    costPerQuery                   // 每次花费
+  };
 }
 ```
 
-### 10.3 UI 设计
-界面底部固定显示：
+### 10.4 UI 设计（底部固定栏）
+
 ```
-┌─────────────────────────┐
-│ 🔑 API: ¥12.50  🟢     │
-│ 📊 本日已用: 2,341 tokens│
-└─────────────────────────┘
+┌──────────────────────────────────────┐
+│ 🔑 ¥12.50 🟢  | 📊 约25,000次 | 📅 ≈83天 │
+│ ↑ 余额           ↑ 剩余次数      ↑ 可用天数  │
+└──────────────────────────────────────┘
 ```
 
-### 10.4 触发时机
-- 应用启动时：自动查询
-- 每次调用 AI API 后：刷新余额
-- 用户点击余额区域：手动刷新
-- 余额自动刷新间隔：10分钟
+点击可展开详情：
 
-### 10.5 余额级别
-| 余额 | 显示 | 行为 |
-|---|---|---|
-| > ¥10 | 🟢 绿色 | 正常 |
-| ¥1-¥10 | 🟡 黄色 | 提醒注意 |
-| < ¥1 | 🔴 红色 | 弹出提示充值 |
-| 查询失败 | ⚪ 灰色 | 显示「离线模式」 |
+```
+┌──────────────────────────────────────┐
+│ DeepSeek API 状态                     │
+├──────────────────────────────────────┤
+│ 余额：        ¥12.50                    │
+│ 剩余调用：    约25,000次                │
+│ 日均消耗：    约300次（¥0.15）           │
+│ 预计可用：    约83天                     │
+│ 上次查询：    30秒前                     │
+│                                      │
+│ [🔁 刷新]    [⚙️ 设置 Key]              │
+└──────────────────────────────────────┘
+```
 
-### 10.6 本地存储
-- 用户输入 API Key → 存入 `localStorage('deepseek_api_key')`
-- 每次启动自动读取
-- 提供「设置 API Key」的入口
-- 支持清除已保存的 Key
+### 10.5 三级颜色
+
+| 余额 | 剩余次数 | 颜色 | 显示 |
+|---|---|---|---|
+| > ¥10 | > 20,000 | 🟢 绿 | 正常使用 |
+| ¥1-¥10 | 2,000-20,000 | 🟡 黄 | 「余额不足¥10」提示 |
+| < ¥1 | < 2,000 | 🔴 红 |「即将耗尽，请充值」弹窗 |
+| 查询失败 | — | ⚪ 灰 |「离线模式」 |
+
+### 10.6 日消耗统计
+- 每次调用 API 时记录 token 消耗
+- 保存在 `localStorage('daily_usage')`
+- 每天自动归零重置
+- 显示本日已用次数和花费
+
+### 10.7 界面位置
+主窗口右下角，**固定悬浮**，不随内容滚动，始终可见。
