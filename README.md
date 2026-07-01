@@ -31,8 +31,15 @@ macOS 桌面应用。不需要打开浏览器，不需要输各种命令，双�
 
 ## 📦 安装（30 秒）
 
-1. **下载** → 点上面的「Code」→ Download ZIP，或者直接去[Releases](https://github.com/Ivan666jjj/xiaohuan-tools/releases)下载 `.dmg`
-2. **安装** → 双击 `.dmg` → 把 `小焕工具箱.app` 拖进 `Applications` 文件夹
+### Mac 用户
+1. 下载 `小焕工具箱-1.0.0-arm64.dmg`
+2. 双击打开，把 App 拖进 Applications 文件夹
+3. 打开即可使用
+
+### Windows 用户
+1. 下载 `小焕工具箱-Setup-1.0.0.exe`
+2. 双击运行，一路点「下一步」
+3. 安装完成后桌面会出现快捷方式
 3. **配置** → 打开 App → 输入你的 DeepSeek API Key（[免费注册](https://platform.deepseek.com)，充 ¥10 能用很久）
 4. **使用** → 直接打字问任何问题
 
@@ -74,7 +81,7 @@ macOS 桌面应用。不需要打开浏览器，不需要输各种命令，双�
 
 | 需要 | 说明 |
 |---|---|
-| 💻 macOS 14+ | Apple Silicon (M1-M4) 或 Intel 都行 |
+| 💻 macOS 14+ 或 Windows 10+ | Apple Silicon (M1-M4) / Intel / Windows 都行 |
 | 🔑 DeepSeek API Key | [platform.deepseek.com](https://platform.deepseek.com) 注册 → 左边 API Keys → 创建 → 复制粘贴到 App |
 | 💰 ¥10-20 充值 | 够用很久，App 里会显示余额和剩余次数 |
 
