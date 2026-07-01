@@ -1,6 +1,7 @@
 # 🚀 Mineradio-MacOS M4 性能优化
 
-> 专为 Apple Silicon (M1/M2/M3/M4) 设计的 Mineradio 一键优化工具
+> 专为 Apple Silicon (M1/M2/M3/M4) 全系列设计的 Mineradio 一键优化工具
+自动检测芯片型号，匹配专属优化参数
 > 原项目：[XxHuberrr/Mineradio](https://github.com/XxHuberrr/Mineradio)（GPL-3.0）
 > Mac 移植：[YiIimini/Mineradio-MacOS](https://github.com/YiIimini/Mineradio-MacOS)
 
@@ -17,7 +18,7 @@
 ## 优化说明
 本优化工具分为两个版本：
 
-**公开版（本仓库）：** 仅包含 M4 性能优化脚本。下载后运行即可对本地安装的 Mineradio 进行 GPU 加速。
+**公开版（本仓库）：** 包含 M1/M2/M3/M4 全系列性能优化脚本。下载后运行即可对本地安装的 Mineradio 进行 GPU 加速。
 
 **个人完整版（未公开）：** 含汽水音乐 API 集成，仅供个人学习使用，不上传至 GitHub。
 

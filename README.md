@@ -16,10 +16,10 @@
 ---
 
 ## 📦 包含工具
-### 🎵 Mineradio-MacOS M4 优化
+### 🎵 Mineradio-MacOS M芯片优化
 专为 Apple Silicon (M1/M2/M3/M4) 优化，GPU 硬件加速 + 渲染优化，让 Mineradio 在 Mac 上流畅运行。
 ```
-cd Mineradio-M4优化 && bash optimize-mineradio-m4.sh
+cd Mineradio-M芯片优化 && bash optimize-mineradio-m4.sh
 ```
 原项目：[XxHuberrr/Mineradio](https://github.com/XxHuberrr/Mineradio)（GPL-3.0）
 
