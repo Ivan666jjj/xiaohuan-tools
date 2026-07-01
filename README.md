@@ -15,54 +15,6 @@ macOS 桌面应用，集合 19 个 AI 技能，点开即用。
 ### 包含功能
 | 分类 | 技能 |
 |---|---|
-| 🌤 天气 | 智能天气校准、火烧云预测（全国30城机位） |
-| 📜 汉语言 | 说文解字、诗词平仄、音韵学、经学引证、古籍句读 |
-| 📝 学习 | 笔记转考题、文件阅读、文件归类 |
-| 🍳 生活 | 菜谱推荐、购物清单、健康提醒 |
-| 🤖 写作 | 半文半白写作、人类化写作 |
-| 🎯 省钱 | Token 自动压缩优化 |
-
-> 本仓库原工具（Mineradio优化、归类器、智能天气等）仍可用，详见下方。
-
----
-
-<p align="center">
-  <h1 align="center">🔧 小焕的工具 · Xiaohuan Tools</h1>
-  <p align="center">
-    实用小工具集合 — 天气校准 / 文件归类 / PDF 处理
-    <br>
-    全部免费开源 · 中国人民大学文学院强基古文字方向出品
-  </p>
-  <p align="center">
-    <img src="https://img.shields.io/badge/平台-macOS%20%7C%20Windows%20%7C%20Linux-blue" alt="Platform">
-    <img src="https://img.shields.io/badge/Python-3.8%2B-green" alt="Python">
-    <img src="https://img.shields.io/badge/许可证-MIT-orange" alt="License">
-    <img src="https://img.shields.io/badge/古籍爱好者-适用-brightgreen" alt="Guji">
-  </p>
-</p>
-
----
-
-## 📦 包含工具
-### 🎵 Mineradio-MacOS M芯片优化
-专为 Apple Silicon (M1/M2/M3/M4) 优化，GPU 硬件加速 + 渲染优化，让 Mineradio 在 Mac 上流畅运行。
-```
-cd Mineradio-M芯片优化 && bash optimize-mineradio-m4.sh
-```
-原项目：[XxHuberrr/Mineradio](https://github.com/XxHuberrr/Mineradio)（GPL-3.0）
-
-
-| 工具 | 功能 | 适合谁 | 平台 |
-|------|------|--------|:----:|
-| 🌤 **智能天气** | 多模型交叉验证天气预报，自动修正云量和降雨概率偏差 | 所有人，比手机天气更准 | macOS / Windows / Linux |
-| 🏯 **北京天气校准版** | 专为北京海淀优化，内置 GFS 偏差校准系数 | 北京居民/海淀学生/圆明园周边 | macOS / Windows / Linux |
-| 📂 **小焕归类器** | 选择文件夹 → 按文件名关键词自动分类整理 | 资料太多的学生/办公族 | macOS / Windows |
-| 🔧 **小焕的转换工具** | PDF 合并/拆分/提取/转图片、图片转 PDF、DOCX 转 PDF | 需处理 PDF 的任何人 | macOS |
-
----
-
-## 🪜 安装步骤
-
 ### 第一步：安装 Python
 
 打开终端，输入：
@@ -86,39 +38,6 @@ pip3 install -r requirements.txt
 或者用终端运行：
 
 ```bash
-# 智能天气（全国通用）
-python3 智能天气/smart_weather.py
-
-# 北京天气（海淀校准版）
-python3 智能天气/beijing_weather.py
-
-# 归类器
-python3 归类器/classifier.py
-
-# 转换工具
-python3 转换工具/converter.py
-```
-
----
-
-## 📂 小焕归类器 — 每个大学生都能用
-
-智能识别文件名，把散乱的文件自动归类到对应文件夹。无论你是文科还是理科，都能找到对应的分类。
-
-**使用方法：** 双击运行 → 点击"选择文件夹" → 选一个东西比较多的文件夹 → 点击"开始归类"
-
-> 💡 **建议选什么文件夹？**
-> - 你的"下载"文件夹（通常最乱）
-> - 你的"桌面"（建议先把桌面文件移到一个新文件夹里再归类）
-> - 一学期的"课程资料"文件夹
-> - 写论文时的"参考资料"文件夹
-
-> 💡 **Windows 用户请看这里：**
-> 1. 进入 `归类器_Windows` 文件夹，双击 **小焕归类器.bat** 或 **小焕归类器.pyw**
-> 2. 或者 **下载打包好的 .exe**（无需安装 Python）：
->    打开 https://github.com/Ivan666jjj/xiaohuan-tools/actions
->    点最新的 **打包 Windows exe** → 点 **小焕归类器_Windows** 下载 .exe 文件
-
 ### 分类说明（文理科通用）
 
 | 分类 | 识别关键词（举例） | 适合 |
