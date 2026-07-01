@@ -16,6 +16,13 @@
 ---
 
 ## 📦 包含工具
+### 🎵 Mineradio-MacOS M4 优化
+专为 Apple Silicon (M1/M2/M3/M4) 优化，GPU 硬件加速 + 渲染优化，让 Mineradio 在 Mac 上流畅运行。
+```
+cd Mineradio-M4优化 && bash optimize-mineradio-m4.sh
+```
+原项目：[XxHuberrr/Mineradio](https://github.com/XxHuberrr/Mineradio)（GPL-3.0）
+
 
 | 工具 | 功能 | 适合谁 | 平台 |
 |------|------|--------|:----:|
@@ -237,3 +244,4 @@ PDF 合并、拆分、提取、图片转 PDF 等功能都能用，DOCX 转 PDF �
 MIT © 2026 严小焕 · 中国人民大学文学院强基古文字方向
 
 如有问题或建议，欢迎联系：**1416578309@qq.com**
+
