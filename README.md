@@ -20,6 +20,43 @@ macOS 桌面应用。不需要打开浏览器，不需要输各种命令，双�
 - 应用启动速度提升
 - 内存占用降低
 
+---
+
+## 🛠 制作流程（开发者看）
+
+小焕工具箱是跨平台应用，一套代码可以同时构建 Mac、Windows、Android 三个版本。
+
+### 技术栈
+| 层 | 技术 |
+|---|---|
+| 界面 | HTML + CSS + JavaScript |
+| 桌面端框架 | Electron 33 |
+| 移动端框架 | Capacitor（Android） |
+| API 调用 | DeepSeek / Open-Meteo / wttr.in |
+
+### 构建流程
+```
+源码 (HTML/CSS/JS)
+    ↓
+Electron 构建 → Mac .dmg + Windows .exe
+Capacitor 构建 → Android .apk
+```
+
+### 是否可行？
+✅ **完全可行。** 所有三个平台（Mac + Windows + Android）使用同一份前端代码，通过不同框架打包为原生应用。数据层面：
+
+| 数据 | 来源 | 联网 |
+|---|---|---|
+| 天气 | Open-Meteo API + wttr.in | ✅ 需要 |
+| 说文解字 | 本地 JSON 数据库 (2100+字) | ❌ 离线可用 |
+| 诗词平仄 | 本地 JSON 数据库 | ❌ 离线可用 |
+| AI 功能 | DeepSeek API | ✅ 需要 |
+
+### 源码位置
+本地路径：`~/xiaohuan-app/`
+GitHub 仓库：[Ivan666jjj/xiaohuan-tools](https://github.com/Ivan666jjj/xiaohuan-tools)
+
+
 
 > 一个 App 里装了 19 个 AI 功能：天气、火烧云预测、说文解字、诗词平仄、菜谱推荐、笔记转考题……
 > 🪟 **液态玻璃 UI** — 全新视觉风格，毛玻璃效果，跟随 macOS 设计语言。
@@ -60,6 +97,12 @@ macOS 桌面应用。不需要打开浏览器，不需要输各种命令，双�
 1. 下载 `小焕工具箱-Setup-1.0.0.exe`
 2. 双击运行，一路点「下一步」
 3. 安装完成后桌面会出现快捷方式
+
+### Android 用户
+1. 下载 `小焕工具箱-1.0.0.apk`
+2. 传到手机上，打开文件管理器点击安装
+3. 如果提示「未知来源」，去设置里允许安装
+4. 安装完成后打开即可使用
 3. **配置** → 打开 App → 输入你的 DeepSeek API Key（[免费注册](https://platform.deepseek.com)，充 ¥10 能用很久）
 4. **使用** → 直接打字问任何问题
 
