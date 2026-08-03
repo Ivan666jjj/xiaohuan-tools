@@ -66,6 +66,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     var pendingFiles: [URL] = []
     var isPublishing = false
+    var releaseCheck: NSButton!
 
     // MARK: 生命周期
 
@@ -160,6 +161,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         typeSeg.translatesAutoresizingMaskIntoConstraints = false
         main.addSubview(typeSeg)
 
+        releaseCheck = NSButton(checkboxWithTitle: "📦 自动创建 Release", target: nil, action: nil)
+        releaseCheck.state = .on
+        releaseCheck.font = .systemFont(ofSize: 11)
+        releaseCheck.toolTip = "发布安装包时自动在 GitHub 创建 Release 并上传"
+        releaseCheck.translatesAutoresizingMaskIntoConstraints = false
+        main.addSubview(releaseCheck)
+
         let noteLabel = NSTextField(labelWithString: "更新说明")
         noteLabel.font = .systemFont(ofSize: 12)
         noteLabel.translatesAutoresizingMaskIntoConstraints = false
@@ -246,6 +254,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             versionField.widthAnchor.constraint(equalToConstant: 110),
             typeSeg.centerYAnchor.constraint(equalTo: verLabel.centerYAnchor),
             typeSeg.leadingAnchor.constraint(equalTo: versionField.trailingAnchor, constant: 14),
+
+            releaseCheck.centerYAnchor.constraint(equalTo: typeSeg.centerYAnchor),
+            releaseCheck.leadingAnchor.constraint(equalTo: typeSeg.trailingAnchor, constant: 14),
 
             noteLabel.topAnchor.constraint(equalTo: verLabel.bottomAnchor, constant: 16),
             noteLabel.leadingAnchor.constraint(equalTo: main.leadingAnchor, constant: 24),
@@ -386,6 +397,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         guard !pendingFiles.isEmpty else {
             log("请先拖入要发布的文件", isError: true); return
         }
+        // 大文件警告（>100MB）
+        let big = pendingFiles.filter { (try? FileManager.default.attributesOfItem(atPath: $0.path))?[.size] as? Int64 ?? 0 > 100 * 1024 * 1024 }
+        if !big.isEmpty {
+            let names = big.map { $0.lastPathComponent }.joined(separator: ", ")
+            log("⚠️ 大文件(>100MB)：\(names)\n建议 Git LFS 或压缩", isError: true)
+            let a = NSAlert()
+            a.messageText = "检测到大文件"
+            a.informativeText = "\(names)\nGitHub 限制单文件 ≤100MB，继续可能失败。"
+            a.addButton(withTitle: "仍然继续")
+            a.addButton(withTitle: "取消")
+            if a.runModal() == .alertSecondButtonReturn { return }
+        }
         // 仓库路径：默认工作区 xiaohuan-tools
         let repoPath = UserDefaults.standard.string(forKey: "repo_path")
             ?? "/Users/Admin/.reasonix/global-workspace/xiaohuan-tools"
@@ -443,7 +466,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             ["add", "-A"],
             ["commit", "-m", msg],
             ["pull", "--rebase", "--autostash"],
-            ["push"],
         ]
         for args in steps {
             let r = GitRunner.run(in: repoPath, args) { out in
@@ -455,6 +477,30 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 return
             }
         }
+        // push：失败指数退避重试 3 次
+        var pushOK = false
+        for attempt in 1...3 {
+            DispatchQueue.main.async { self.log("git push（第 \(attempt)/3 次尝试）") }
+            let r = GitRunner.run(in: repoPath, ["push"]) { out in
+                DispatchQueue.main.async { self.log(out) }
+            }
+            if r.ok { pushOK = true; break }
+            let wait = UInt32(2 * attempt)
+            DispatchQueue.main.async { self.log("push 失败，\(wait)s 后重试…", isError: true) }
+            sleep(wait)
+        }
+        if !pushOK {
+            DispatchQueue.main.async { self.log("push 失败（已重试 3 次），请检查网络/凭据", isError: true) }
+            finishPublish(ok: false)
+            return
+        }
+
+        // 打 tag（版本号非空时）
+        if !versionField.stringValue.isEmpty {
+            let tag = versionField.stringValue.hasPrefix("v") ? versionField.stringValue : "v\(versionField.stringValue)"
+            _ = GitRunner.run(in: repoPath, ["tag", tag])
+            _ = GitRunner.run(in: repoPath, ["push", "origin", tag])
+        }
 
         // 4. 记录历史
         HistoryStore.add(["time": Date().description.prefix(19).description,
@@ -462,6 +508,24 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         DispatchQueue.main.async {
             self.log("✅ 发布成功：\(msg)")
             self.sendNotification(files: files)
+        }
+        // 5. 自动创建 GitHub Release（勾选 + 有 token + 有安装包时）
+        if releaseCheck.state == .on, let token = KeychainStore.load(), isPackage {
+            let asset = pendingFiles.first { ["dmg", "exe", "apk", "pkg"].contains($0.pathExtension.lowercased()) }?.path
+            let tag = versionField.stringValue.isEmpty ? "latest" : (versionField.stringValue.hasPrefix("v") ? versionField.stringValue : "v\(versionField.stringValue)")
+            let relName = "\(type)\(versionField.stringValue.isEmpty ? "" : " \(versionField.stringValue)")"
+            DispatchQueue.main.async { self.log("📦 正在创建 GitHub Release…") }
+            GitHubAPI.createRelease(token: token, repo: "Ivan666jjj/xiaohuan-tools",
+                                    tag: tag, name: relName, body: note, assetPath: asset) { result in
+                DispatchQueue.main.async {
+                    switch result {
+                    case .success(let url):
+                        self.log("✅ Release 已创建：\(url)")
+                    case .failure(let err):
+                        self.log("Release 创建失败：\(err.localizedDescription)", isError: true)
+                    }
+                }
+            }
         }
         finishPublish(ok: true)
     }

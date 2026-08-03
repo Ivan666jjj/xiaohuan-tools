@@ -134,3 +134,72 @@ struct HistoryStore {
     }
     static func clear() { UserDefaults.standard.removeObject(forKey: key) }
 }
+
+// MARK: - Release 自动创建（含上传安装包 asset）
+
+extension GitHubAPI {
+    /// 创建 Release 并上传安装包
+    /// - Parameters:
+    ///   - repo: "owner/repo"
+    static func createRelease(token: String, repo: String, tag: String, name: String,
+                              body: String, assetPath: String?,
+                              completion: @escaping (Result<String, NSError>) -> Void) {
+        let url = URL(string: "https://api.github.com/repos/\(repo)/releases")!
+        var req = URLRequest(url: url)
+        req.httpMethod = "POST"
+        req.setValue("token \(token)", forHTTPHeaderField: "Authorization")
+        req.setValue("application/vnd.github+json", forHTTPHeaderField: "Accept")
+        req.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        let payload: [String: Any] = [
+            "tag_name": tag, "name": name, "body": body, "draft": false, "prerelease": false,
+        ]
+        req.httpBody = try? JSONSerialization.data(withJSONObject: payload)
+
+        URLSession.shared.dataTask(with: req) { data, resp, _ in
+            guard let data = data,
+                  let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+                completion(.failure(NSError(domain: "GitHub", code: -1, userInfo: [NSLocalizedDescriptionKey: "Release 响应解析失败"])))
+                return
+            }
+            let status = (resp as? HTTPURLResponse)?.statusCode ?? 0
+            if status == 201 {
+                let html = json["html_url"] as? String ?? ""
+                // 有安装包 → 上传 asset
+                if let asset = assetPath, let up = json["upload_url"] as? String {
+                    uploadAsset(token: token, uploadURL: up, filePath: asset) { ok, msg in
+                        completion(.success(html + (ok ? "（含安装包）" : "（Release 已建，asset 上传失败: \(msg)）")))
+                    }
+                } else {
+                    completion(.success(html))
+                }
+            } else {
+                let msg = (json["message"] as? String) ?? "HTTP \(status)"
+                completion(.failure(NSError(domain: "GitHub", code: status, userInfo: [NSLocalizedDescriptionKey: "创建 Release 失败: \(msg)"])))
+            }
+        }.resume()
+    }
+
+    /// 上传 release asset（二进制 body）
+    private static func uploadAsset(token: String, uploadURL: String, filePath: String,
+                                    completion: @escaping (Bool, String) -> Void) {
+        // upload_url 形如 .../releases/{id}/assets{?name,label}
+        let clean = uploadURL.replacingOccurrences(of: "{?name,label}", with: "")
+        let fname = (filePath as NSString).lastPathComponent
+        guard let url = URL(string: clean + "?name=" + fname.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!) else {
+            completion(false, "URL 无效"); return
+        }
+        guard let data = try? Data(contentsOf: URL(fileURLWithPath: filePath)) else {
+            completion(false, "文件读取失败"); return
+        }
+        var req = URLRequest(url: url)
+        req.httpMethod = "POST"
+        req.setValue("token \(token)", forHTTPHeaderField: "Authorization")
+        req.setValue("application/octet-stream", forHTTPHeaderField: "Content-Type")
+        req.httpBody = data
+        URLSession.shared.dataTask(with: req) { _, resp, _ in
+            let status = (resp as? HTTPURLResponse)?.statusCode ?? 0
+            completion(status == 201, "HTTP \(status)")
+        }.resume()
+    }
+}
+
