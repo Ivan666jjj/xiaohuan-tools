@@ -165,9 +165,7 @@ GitHub 仓库：[Ivan666jjj/xiaohuan-tools](https://github.com/Ivan666jjj/xiaohu
 
 ## 👤 关于
 
-**严小焕** · 中国人民大学强基计划 古文字学专业
-方向：数字人文 · 古文字数字化
-📧 1416578309@qq.com
+**严小焕** · 中国人民大学强基计划 古文字学专业 ｜ 方向：数字人文 ｜ 📧 1416578309@qq.com
 
 ---
 
