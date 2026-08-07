@@ -1,0 +1,5 @@
+--- a/context/I18nContext.tsx
++++ b/context/I18nContext.tsx
+@@ -15,1 +15,1 @@
+-    return stored === 'zh' || stored === 'en' || stored === 'ja' || stored === 'ko' ? stored : 'en';
++    return stored === 'zh' || stored === 'en' || stored === 'ja' || stored === 'ko' ? stored : 'zh';
